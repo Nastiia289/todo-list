@@ -1,62 +1,65 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import { addTodo, deleteTodo } from './store/actions';
+import React, { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { addTodo, deleteTodo, toggleTodo } from "./actions/todoActions";
+import "./App.css";
 
-class TodoList extends React.Component {
-  state = {
-    todoText: ''
-  };
+function App() {
+  const [inputValue, setInputValue] = useState("");
+  const todos = useSelector((state) => state.todos);
+  const dispatch = useDispatch();
 
-  handleAddTodo = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    this.props.addTodo(this.state.todoText);
-    this.setState({ todoText: '' });
+    if (inputValue.trim() !== "") {
+      dispatch(addTodo({
+        id: new Date().getTime(),
+        title: inputValue.trim(),
+        completed: false,
+      }));
+      setInputValue("");
+    }
   };
 
-  handleDeleteTodo = (id) => {
-    this.props.deleteTodo(id);
+  const handleDelete = (id) => {
+    dispatch(deleteTodo({
+      id: id,
+    }));
   };
 
-  handleChange = (e) => {
-    this.setState({ todoText: e.target.value });
+  const handleToggle = (id) => {
+    dispatch(toggleTodo({
+      id: id,
+    }));
   };
 
-  render() {
-    return (
-      <div>
-        <form onSubmit={this.handleAddTodo}>
+  return (
+    <div className="App">
+      <div className="todo-list">
+        <form onSubmit={handleSubmit}>
           <input
             type="text"
-            placeholder="Add a todo"
-            value={this.state.todoText}
-            onChange={this.handleChange}
+            placeholder="Add todo..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
           />
           <button type="submit">Add</button>
         </form>
         <ul>
-          {this.props.todos.map((todo) => (
+          {todos.map((todo) => (
             <li key={todo.id}>
-              {todo.text}
-              <button onClick={() => this.handleDeleteTodo(todo.id)}>Delete</button>
+              <span
+                className={todo.completed ? "completed" : ""}
+                onClick={() => handleToggle(todo.id)}
+              >
+                {todo.title}
+              </span>
+              <button onClick={() => handleDelete(todo.id)}>Delete</button>
             </li>
           ))}
         </ul>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
-const mapStateToProps = (state) => {
-  return {
-    todos: state.todos
-  };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    addTodo: (text) => dispatch(addTodo(text)),
-    deleteTodo: (id) => dispatch(deleteTodo(id))
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(TodoList);
+export default App;
